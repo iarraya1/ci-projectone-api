@@ -55,6 +55,9 @@ app.post('/books', (req, res) => {
   };
 
   books.push(book);
+  
+// Logging added here 
+  console.log(`[BOOK CREATED] ${new Date().toISOString()} - ${JSON.stringify(book)}`);
 
   res.status(201).json(book);
 });
@@ -64,6 +67,9 @@ app.get('/books/:id', (req, res) => {
   const book = books.find(b => b.id === Number(req.params.id));
 
   if (!book) {
+    //Logging added here
+    console.error(`Book not found: ID ${req.params.id}`);
+    
     return res.status(404).json({
       error: 'Book not found'
     });
@@ -77,6 +83,9 @@ app.put('/books/:id', (req, res) => {
   const book = books.find(b => b.id === Number(req.params.id));
 
   if (!book) {
+    //Logging added here
+    console.error(`Update failed - Book not found: ID ${req.params.id}`);
+    
     return res.status(404).json({
       error: 'Book not found'
     });
@@ -85,6 +94,9 @@ app.put('/books/:id', (req, res) => {
   const { title, authorId, price } = req.body;
 
   if (!title || !authorId) {
+    //Logging added here
+    console.error(`Validation failed: missing title or authorId`);
+  
     return res.status(400).json({
       error: 'title and authorId are required'
     });
@@ -93,6 +105,9 @@ app.put('/books/:id', (req, res) => {
   const author = authors.find(a => a.id === Number(authorId));
 
   if (!author) {
+    //Logging added here
+    console.error(`Validation failed: authorId must reference existing author`);
+    
     return res.status(400).json({
       error: 'authorId must reference an existing author'
     });
@@ -101,6 +116,9 @@ app.put('/books/:id', (req, res) => {
   book.title = title;
   book.authorId = Number(authorId);
   book.price = price || 0;
+  
+//Logging added here
+  console.log(`Book fully updated: ${JSON.stringify(book)}`);
 
   res.status(200).json(book);
 });
@@ -110,6 +128,9 @@ app.patch('/books/:id', (req, res) => {
   const book = books.find(b => b.id === Number(req.params.id));
 
   if (!book) {
+    //Logging added here
+    console.error(`Update failed - Book not found: ID ${req.params.id}`);
+    
     return res.status(404).json({
       error: 'Book not found'
     });
@@ -121,6 +142,9 @@ app.patch('/books/:id', (req, res) => {
     const author = authors.find(a => a.id === Number(authorId));
 
     if (!author) {
+    //Logging added here
+      console.error(`Validation failed: authorId must reference existing author`);    
+
       return res.status(400).json({
         error: 'authorId must reference an existing author'
       });
@@ -131,6 +155,9 @@ app.patch('/books/:id', (req, res) => {
 
   if (title !== undefined) book.title = title;
   if (price !== undefined) book.price = price;
+  
+//Logging added here
+  console.log(`Book updated: ${JSON.stringify(book)}`);
 
   res.status(200).json(book);
 });
@@ -140,12 +167,18 @@ app.delete('/books/:id', (req, res) => {
   const bookIndex = books.findIndex(b => b.id === Number(req.params.id));
 
   if (bookIndex === -1) {
+    //Logging added here
+    console.error(`Delete failed: Book not found ID ${req.params.id}`);
+    
     return res.status(404).json({
       error: 'Book not found'
     });
   }
 
   books.splice(bookIndex, 1);
+
+//Logging added here 
+  console.log(`Book deleted: ID ${req.params.id}`);
 
   res.status(204).send();
 });
@@ -162,8 +195,19 @@ app.use((req, res) => {
   });
 });
 
+//Global error handler
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err.stack);
+
+  res.status(500).json({
+    error: 'Internal Server Error'
+  });
+});
+
 const port = process.env.PORT || 10000;
 
 app.listen(port, () => {
   console.log(`Bookstore API listening on port ${port}`);
 });
+
+
