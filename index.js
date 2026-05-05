@@ -31,26 +31,37 @@ app.get('/books', (req, res) => {
 
 // POST /books → add a book
 app.post('/books', (req, res) => {
-  const { title, authorId, price } = req.body;
+  const { title, author, price } = req.body;
 
-  if (!title || !authorId) {
+  if (!title || !author) {
+	//Logging added here
+	console.error('Validation failed: missing title or author');
+	  
     return res.status(400).json({
-      error: 'title and authorId are required'
+      error: 'title and author are required'
     });
   }
 
-  const author = authors.find(a => a.id === Number(authorId));
+  let existingAuthor = authors.find(
+    a => a.name.toLowerCase() === author.toLowerCase()
+  );
 
-  if (!author) {
-    return res.status(400).json({
-      error: 'authorId must reference an existing author'
-    });
+  if (!existingAuthor) {
+    existingAuthor = {
+      id: authors.length + 1,
+      name: author
+    };
+
+    authors.push(existingAuthor);
+
+    console.log(`[AUTHOR CREATED] ${new Date().toISOString()} - ${JSON.stringify(existingAuthor)}`);
   }
 
   const book = {
     id: nextBookId++,
     title,
-    authorId: Number(authorId),
+    authorId: existingAuthor.id,
+    author: existingAuthor.name,
     price: price || 0
   };
 
@@ -91,34 +102,39 @@ app.put('/books/:id', (req, res) => {
     });
   }
 
-  const { title, authorId, price } = req.body;
+  const { title, author, price } = req.body;
 
-  if (!title || !authorId) {
+  if (!title || !author) {
     //Logging added here
-    console.error(`Validation failed: missing title or authorId`);
+    console.error(`Validation failed: missing title or author`);
   
     return res.status(400).json({
-      error: 'title and authorId are required'
+      error: 'title and author are required'
     });
   }
+// Find or create author
+    let existingAuthor = authors.find(
+    a => a.name.toLowerCase() === author.toLowerCase()
+  );
 
-  const author = authors.find(a => a.id === Number(authorId));
+  if (!existingAuthor) {
+    existingAuthor = {
+      id: authors.length + 1,
+      name: author
+    };
 
-  if (!author) {
-    //Logging added here
-    console.error(`Validation failed: authorId must reference existing author`);
-    
-    return res.status(400).json({
-      error: 'authorId must reference an existing author'
-    });
+    authors.push(existingAuthor);
+
+    console.log(`[AUTHOR CREATED] ${new Date().toISOString()} - ${JSON.stringify(existingAuthor)}`);
   }
 
+  // ✅ Update book
   book.title = title;
-  book.authorId = Number(authorId);
+  book.authorId = existingAuthor.id;
+  book.author = existingAuthor.name;
   book.price = price || 0;
-  
-//Logging added here
-  console.log(`Book fully updated: ${JSON.stringify(book)}`);
+
+  console.log(`[BOOK UPDATED - FULL] ${new Date().toISOString()} - ${JSON.stringify(book)}`);
 
   res.status(200).json(book);
 });
@@ -136,28 +152,32 @@ app.patch('/books/:id', (req, res) => {
     });
   }
 
-  const { title, authorId, price } = req.body;
+  const { title, author, price } = req.body;
 
-  if (authorId !== undefined) {
-    const author = authors.find(a => a.id === Number(authorId));
+    if (author !== undefined) {
+    let existingAuthor = authors.find(
+      a => a.name.toLowerCase() === author.toLowerCase()
+    );
 
-    if (!author) {
-    //Logging added here
-      console.error(`Validation failed: authorId must reference existing author`);    
+    if (!existingAuthor) {
+      existingAuthor = {
+        id: authors.length + 1,
+        name: author
+      };
 
-      return res.status(400).json({
-        error: 'authorId must reference an existing author'
-      });
+      authors.push(existingAuthor);
+
+      console.log(`[AUTHOR CREATED] ${new Date().toISOString()} - ${JSON.stringify(existingAuthor)}`);
     }
 
-    book.authorId = Number(authorId);
+    book.authorId = existingAuthor.id;
+    book.author = existingAuthor.name;
   }
 
   if (title !== undefined) book.title = title;
   if (price !== undefined) book.price = price;
-  
-//Logging added here
-  console.log(`Book updated: ${JSON.stringify(book)}`);
+
+  console.log(`[BOOK UPDATED - PARTIAL] ${new Date().toISOString()} - ${JSON.stringify(book)}`);
 
   res.status(200).json(book);
 });
