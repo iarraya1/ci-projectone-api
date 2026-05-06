@@ -8,6 +8,7 @@
     "test": "newman run postman/bookstore.postman_collection.json -e postman/bookstore.postman_environment.json"
   },
   "dependencies": {
+    "cors": "^2.8.6",
     "express": "^4.18.2",
     "morgan": "^1.10.0"
   },
